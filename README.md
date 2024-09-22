@@ -31,7 +31,7 @@ sudo apt-get install git
 git clone https://github.com/zamzasalim/tbot.git
 ```
 ```
-cd tbot
+cd t3rn-bot
 ```
 ```
 python3 -m pip install -r requirements.txt
