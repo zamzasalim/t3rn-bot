@@ -4,7 +4,7 @@ import time
 import sys
 import os
 import random
-from data_hex import Data_HEX  # Import Data_HEX from data_hex.py
+from data_hex import Data_HEX
 from privateKeys import private_keys, VALUE_ETH, GAS_LIMIT_ADJUSTMENT, FEE_GWEI
 from decimal import Decimal
 
@@ -74,11 +74,8 @@ def send_bridge_transaction(web3, account, data, network_name, nonce):
         print(f"Error estimating gas: {e}")
         return None, None
 
-    # Ensure consistent types for gas calculations
     current_gas_price_gwei = Decimal(get_current_gas_price(web3))
     priority_fee_gwei = Decimal(FEE_GWEI)
-    
-    # Calculate max fee per gas as a Decimal
     max_fee_gwei = current_gas_price_gwei + priority_fee_gwei
 
     base_fee = web3.to_wei(current_gas_price_gwei, 'gwei')
@@ -144,19 +141,20 @@ def save_tx_hash(tx_hash, source_network, dest_network):
 
 def main():
     print_intro()
-
     print("Select network:")
     print("1. ARB (Arbitrum Sepolia)")
     print("2. OP (Optimism Sepolia)")
     print("3. BASE (Base Sepolia)")
     print("4. BLAST (Blast Sepolia)")
+    print("5. Multi Bridge (Run all transactions for selected network)")
 
-    network_choice = input("Network choice (1-4): ")
+    network_choice = input("Network choice (1-5): ")
     network_dict = {
         '1': 'Arbitrum Sepolia',
         '2': 'OP Sepolia',
         '3': 'Base Sepolia',
-        '4': 'Blast Sepolia'
+        '4': 'Blast Sepolia',
+        '5': 'Multi Bridge'
     }
     if network_choice not in network_dict:
         print("Invalid choice.")
@@ -164,82 +162,127 @@ def main():
 
     selected_network = network_dict[network_choice]
 
-    if os.name == 'posix':
-        os.system('clear')
-    else:
-        os.system('cls')
-
+    # Clear the terminal after selection
+    os.system('clear') if os.name == 'posix' else os.system('cls')
     print_intro()
-    print(f"Select bridge for {selected_network}:")
-    bridges = {
-        'Arbitrum Sepolia': ["ARB - OP SEPOLIA", "ARB - BASE", "ARB - BLAST"],
-        'OP Sepolia': ["OP - ARB", "OP - BASE", "OP - BLAST"],
-        'Base Sepolia': ["BASE - ARB", "BASE - OP", "BASE - BLAST"],
-        'Blast Sepolia': ["BLAST - ARB", "BLAST - OP", "BLAST - BASE"]
-    }
-    
-    for i, bridge in enumerate(bridges[selected_network], start=1):
-        print(f"{i}. {bridge}")
 
-    bridge_choice = input("Enter bridge choice: ")
-    if not bridge_choice.isdigit() or int(bridge_choice) not in range(1, len(bridges[selected_network]) + 1):
-        print("Invalid choice.")
-        sys.exit(1)
+    if selected_network == "Multi Bridge":
+        print("You have selected Multi Bridge mode. Running transactions simultaneously for selected network.")
+        bridges = {
+            'Arbitrum Sepolia': ["ARB - OP SEPOLIA", "ARB - BASE", "ARB - BLAST"],
+            'OP Sepolia': ["OP - ARB", "OP - BASE", "OP - BLAST"],
+            'Base Sepolia': ["BASE - ARB", "BASE - OP", "BASE - BLAST"],
+            'Blast Sepolia': ["BLAST - ARB", "BLAST - OP", "BLAST - BASE"]
+        }
 
-    selected_bridge = bridges[selected_network][int(bridge_choice) - 1]
+        print("Select network for Multi Bridge:")
+        for i, (key, value) in enumerate(network_dict.items(), start=1):
+            if key != '5':  # Exclude Multi Bridge option
+                print(f"{i}. {value}")
 
-    try:
-        num_transactions = int(input("How many times do you want to swap or bridge? "))
-    except ValueError:
-        print("Invalid number.")
-        sys.exit(1)
+        multi_bridge_choice = input("Network choice for Multi Bridge (1-4): ")
+        if multi_bridge_choice not in ['1', '2', '3', '4']:
+            print("Invalid choice.")
+            sys.exit(1)
 
-    if os.name == 'posix':
-        os.system('clear')
-    else:
-        os.system('cls')
-
-    print_intro()
-    print(f"\nSending {num_transactions} transactions from {selected_network} to {selected_bridge}...\n")
-
-    chain_colors = {
-        'Arbitrum Sepolia': '\033[91m',
-        'OP Sepolia': '\033[94m',
-        'Blast Sepolia': '\033[93m',
-        'Base Sepolia': '\033[95m'
-    }
-    reset_color = '\033[0m'
-
-    web3 = Web3(Web3.HTTPProvider(networks[selected_network]['rpc_url']))
-
-    # Use the first private key from privateKeys.py
-    private_key = private_keys[0]
-    if not validate_private_key(private_key):
-        print("Invalid private key format.")
-        sys.exit(1)
-
-    account = Account.from_key(private_key)
-    completed_transactions = 0
-
-    for transaction_number in range(1, num_transactions + 1):
+        multi_network = network_dict[multi_bridge_choice]
         try:
-            nonce = web3.eth.get_transaction_count(account.address)
-            data = Data_HEX[selected_bridge]  # Use Data_HEX instead of data_bridge
-            tx_hash, value_sent = send_bridge_transaction(web3, account, data, selected_network, nonce)
-            
-            if tx_hash:
-                print(f"\033[92mTx Hash: {tx_hash}\nBridge: {selected_bridge} | Amount: {value_sent} ETH | Total Tx: {transaction_number}{reset_color}")
-                save_tx_hash(tx_hash, selected_network, selected_bridge)
-                completed_transactions += 1
-            else:
-                print(f"Failed to send transaction {transaction_number}.")
-            
-            # Add a random delay between 5 and 10 seconds
-            time.sleep(random.uniform(30, 31))  
-        except Exception as e:
-            print(f"Error processing transaction {transaction_number}: {e}")
+            num_transactions = int(input("How many rounds do you want to repeat the transactions? "))
+        except ValueError:
+            print("Invalid number.")
+            sys.exit(1)
 
-    print(f"\n\n\033[92mAll Transactions complete: {completed_transactions}\033[0m")
+        # Clear the terminal after selection
+        os.system('clear') if os.name == 'posix' else os.system('cls')
+        print_intro()
+        print(f"Running {num_transactions} rounds of transactions for {multi_network}...")
+
+        web3 = Web3(Web3.HTTPProvider(networks[multi_network]['rpc_url']))
+        private_key = private_keys[0]
+        if not validate_private_key(private_key):
+            print("Invalid private key format.")
+            sys.exit(1)
+
+        account = Account.from_key(private_key)
+        completed_transactions = 0
+
+        for _ in range(num_transactions):
+            for bridge in bridges[multi_network]:
+                try:
+                    nonce = web3.eth.get_transaction_count(account.address)
+                    data = Data_HEX[bridge]
+                    tx_hash, value_sent = send_bridge_transaction(web3, account, data, multi_network, nonce)
+
+                    if tx_hash:
+                        print(f"\033[92mTx Hash: {tx_hash}\nBridge: {bridge} | Amount: {value_sent} ETH | Total Tx: {completed_transactions + 1}\033[0m")
+                        save_tx_hash(tx_hash, multi_network, bridge)
+                        completed_transactions += 1
+                    else:
+                        print(f"Failed to send transaction for {bridge}.")
+                    
+                    time.sleep(random.uniform(5, 10))  # Random delay between transactions
+                except Exception as e:
+                    print(f"Error processing transaction for {bridge}: {e}")
+
+        print(f"\n\n\033[92mAll Multi Bridge Transactions complete: {completed_transactions}\033[0m")
+
+    else:
+        print(f"Select bridge for {selected_network}:")
+        bridges = {
+            'Arbitrum Sepolia': ["ARB - OP SEPOLIA", "ARB - BASE", "ARB - BLAST"],
+            'OP Sepolia': ["OP - ARB", "OP - BASE", "OP - BLAST"],
+            'Base Sepolia': ["BASE - ARB", "BASE - OP", "BASE - BLAST"],
+            'Blast Sepolia': ["BLAST - ARB", "BLAST - OP", "BLAST - BASE"]
+        }
+        
+        for i, bridge in enumerate(bridges[selected_network], start=1):
+            print(f"{i}. {bridge}")
+
+        bridge_choice = input("Enter bridge choice: ")
+        if not bridge_choice.isdigit() or int(bridge_choice) not in range(1, len(bridges[selected_network]) + 1):
+            print("Invalid choice.")
+            sys.exit(1)
+
+        selected_bridge = bridges[selected_network][int(bridge_choice) - 1]
+
+        try:
+            num_transactions = int(input("How many times do you want to swap or bridge? "))
+        except ValueError:
+            print("Invalid number.")
+            sys.exit(1)
+
+        # Clear the terminal after selection
+        os.system('clear') if os.name == 'posix' else os.system('cls')
+        print_intro()
+        print(f"\nSending {num_transactions} transactions from {selected_network} to {selected_bridge}...\n")
+
+        web3 = Web3(Web3.HTTPProvider(networks[selected_network]['rpc_url']))
+        private_key = private_keys[0]
+        if not validate_private_key(private_key):
+            print("Invalid private key format.")
+            sys.exit(1)
+
+        account = Account.from_key(private_key)
+        completed_transactions = 0
+
+        for transaction_number in range(1, num_transactions + 1):
+            try:
+                nonce = web3.eth.get_transaction_count(account.address)
+                data = Data_HEX[selected_bridge]
+                tx_hash, value_sent = send_bridge_transaction(web3, account, data, selected_network, nonce)
+
+                if tx_hash:
+                    print(f"\033[92mTx Hash: {tx_hash}\nBridge: {selected_bridge} | Amount: {value_sent} ETH | Total Tx: {transaction_number}\033[0m")
+                    save_tx_hash(tx_hash, selected_network, selected_bridge)
+                    completed_transactions += 1
+                else:
+                    print(f"Failed to send transaction {transaction_number}.")
+                
+                time.sleep(random.uniform(8, 10))  # Random delay between transactions
+            except Exception as e:
+                print(f"Error processing transaction {transaction_number}: {e}")
+
+        print(f"\n\n\033[92mAll Transactions complete: {completed_transactions}\033[0m")
 
 if __name__ == "__main__":
     main()
