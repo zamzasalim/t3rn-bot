@@ -67,7 +67,7 @@ pkg install git
 git clone https://github.com/zamzasalim/tbot.git
 ```
 ```
-cd tbot
+cd t3rn-bot
 ```
 ```
 pip install -r requirements.txt
