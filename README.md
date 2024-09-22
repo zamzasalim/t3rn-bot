@@ -28,7 +28,7 @@ sudo apt-get install python3 python3-pip
 sudo apt-get install git
 ```
 ```
-git clone https://github.com/zamzasalim/tbot.git
+git clone https://github.com/zamzasalim/t3rn-bot.git
 ```
 ```
 cd t3rn-bot
