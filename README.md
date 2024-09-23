@@ -64,7 +64,7 @@ pkg install python
 pkg install git
 ```
 ```
-git clone https://github.com/zamzasalim/tbot.git
+git clone https://github.com/zamzasalim/t3rn-bot.git
 ```
 ```
 cd t3rn-bot
