@@ -40,7 +40,7 @@ def loading_message(message, duration):
 
 #log to txt file
 def log(txt):
-    f = open("lognya.txt", "a")
+    f = open("logtx.txt", "a")
     f.write(txt+":"+str(chainId)+'\n')
     f.close()
 
