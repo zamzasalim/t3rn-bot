@@ -3,6 +3,6 @@ private_keys = [
 ]
 
 # Value and Gas Limit
-VALUE_ETH = '0.0101'
+VALUE_ETH = '0.101'
 GAS_LIMIT_ADJUSTMENT = 10000
 FEE_GWEI = '0.5'
