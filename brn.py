@@ -83,9 +83,9 @@ def ClaimBRN(sender, key, amount, orderid, ordertime, txhash):
         print(f'Processing Claim Reward 1 BRN As Executor...')
         web3_brn.eth.wait_for_transaction_receipt(tx_hash)
         print(f'TX-ID : {str(web3_brn.to_hex(tx_hash))}')
-        with open("lognya.txt", "r") as file:
+        with open("logtx.txt", "r") as file:
             lines = file.readlines()
-        with open("lognya.txt", "w") as file:
+        with open("logtx.txt", "w") as file:
             found = False
         for line in lines:
             if line.strip().startswith(txhash):
@@ -100,9 +100,9 @@ def ClaimBRN(sender, key, amount, orderid, ordertime, txhash):
         if "BD#16" in str(e):
             print('Reward BRN Still Not Ready For Claim!')
         elif "BD#15" in str(e):
-            with open("lognya.txt", "r") as file:
+            with open("logtx.txt", "r") as file:
                     lines = file.readlines()
-            with open("lognya.txt", "w") as file:
+            with open("logtx.txt", "w") as file:
                 found = False
             for line in lines:
                 if line.strip().startswith(txhash):
@@ -118,7 +118,7 @@ def ClaimBRN(sender, key, amount, orderid, ordertime, txhash):
         pass
 
 def BLAST_BLAST(sender, key, web3, chainid):
-    with open('lognya.txt', 'r') as file:
+    with open('logtx.txt', 'r') as file:
         local_data = file.read().splitlines()
         for txhash in local_data:
             try:
