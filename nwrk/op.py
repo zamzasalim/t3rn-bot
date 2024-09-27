@@ -227,8 +227,8 @@ def BLAST_BLAST(sender, key, amount, amountin):
         print(f"Error: {e}")
         pass
 
-amountmin = float(0.01)
-amountmax = float(0.0101)  
+amountmin = float(0.1)
+amountmax = float(0.101)  
 sender = web3.eth.account.from_key(privatekeys)
 amountrandom = random.uniform(amountmin, amountmax)
 amount = web3.to_wei(amountrandom, 'ether')
